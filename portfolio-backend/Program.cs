@@ -19,6 +19,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<WebScraper>();
+builder.Services.AddHostedService<TimedWebScraper>();
 
 var app = builder.Build();
 
