@@ -1,3 +1,5 @@
+using portfolio_backend.Services;
+
 var cors = "_allowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
@@ -15,6 +17,8 @@ builder.Services.AddCors(options =>
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
+builder.Services.AddSingleton<WebScraper>();
 
 var app = builder.Build();
 
