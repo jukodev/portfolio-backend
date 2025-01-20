@@ -8,10 +8,17 @@ namespace portfolio_backend.Controllers
     [Route("[controller]")]
     public class WebScrapController (WebScraper scraper) : ControllerBase 
     {
-        [HttpGet(Name = "Test")]
+        [HttpGet("Test")]
         public async Task<WebScrapedStockDto> Get()
         {
             var result = await scraper.ScrapStockData("https://www.boerse.de/realtime-kurse/Apple-Aktie/US0378331005");
+            return result;
+        }
+
+        [HttpGet("Stock")]
+        public async Task<WebScrapedStockDto> GetStock(string url)
+        {
+            var result = await scraper.ScrapStockData(url);
             return result;
         }
     }
