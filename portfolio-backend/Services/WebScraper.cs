@@ -5,21 +5,31 @@ using portfolio_backend.DTOs;
 
 namespace portfolio_backend.Services;
 
-public partial class WebScraper (HttpClient client)
+public partial class WebScraper(HttpClient client)
 {
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
     {
         var html = await GetHtml(url);
         
+        if (url.Equals("https://www.boerse.de/realtime-kurse/Visa-Aktie/US92826C8394"))
+        {
+            var path = Path.Combine(Directory.GetCurrentDirectory(), "stock-data.html");
+            Directory.GetCurrentDirectory();
+            await File.WriteAllTextAsync(path, html);
+        }
+
         var indiceFirst = html.IndexOf("<!-- KURSE -->", StringComparison.Ordinal);
         var indiceLast = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
         var htmlKurse = html.Substring(indiceFirst, indiceLast - indiceFirst);
 
-        var lastPrice = ExtractFloatAfterTag(htmlKurse, "itemprop=\"price\" content=", CultureInfo.InvariantCulture);
+        var lastPrice =
+            ExtractFloatAfterTag(htmlKurse, "itemprop=\"price\" content=", CultureInfo.InvariantCulture);
 
-        var lastPerformance = ExtractFloatAfterTag(htmlKurse, "data-push-attribute=\"perfInstAbs", CultureInfo.InvariantCulture);
+        var lastPerformance = ExtractFloatAfterTag(htmlKurse, "data-push-attribute=\"perfInstAbs",
+            CultureInfo.InvariantCulture);
 
-        var lastPerformancePercent = ExtractFloatAfterTag(htmlKurse, "data-push-attribute=\"perfInstRel", CultureInfo.InvariantCulture);
+        var lastPerformancePercent = ExtractFloatAfterTag(htmlKurse, "data-push-attribute=\"perfInstRel",
+            CultureInfo.InvariantCulture);
 
         var priceCurrency = ExtractStringAfterTag(htmlKurse, "itemprop=\"priceCurrency\" >", "</span>");
 
@@ -35,7 +45,8 @@ public partial class WebScraper (HttpClient client)
 
         var lastAsk = ExtractFloatAfterTag(html, "data-push-attribute=\"ask\"", CultureInfo.InvariantCulture);
 
-        var yesterdayClose = ExtractFloatAfterTag(html, "data-push-attribute=\"close\"", CultureInfo.InvariantCulture);
+        var yesterdayClose =
+            ExtractFloatAfterTag(html, "data-push-attribute=\"close\"", CultureInfo.InvariantCulture);
 
         var todayHigh = ExtractFloatAfterTag(html, "data-push-attribute=\"high\"", CultureInfo.InvariantCulture);
 
@@ -55,7 +66,7 @@ public partial class WebScraper (HttpClient client)
             TodayLow = todayLow
         };
     }
-    
+
     private static float ExtractFloatAfterTag(string source, string startTag, IFormatProvider culture)
     {
         var val = ExtractValueBetweenTags(source, startTag, "</span>");
@@ -76,12 +87,13 @@ public partial class WebScraper (HttpClient client)
         var endIndex = source.IndexOf(endTag, startIndex, StringComparison.Ordinal);
         return endIndex == -1 ? string.Empty : source.Substring(startIndex, endIndex - startIndex).Trim();
     }
-    
+
     private async Task<string> GetHtml(string url)
     {
         client.DefaultRequestHeaders.UserAgent.Clear();
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Portfolio", "1.0"));
-        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("(compatible; MSIE 6.0; Windows NT 5.2)"));
+        client.DefaultRequestHeaders.UserAgent.Add(
+            new ProductInfoHeaderValue("(compatible; MSIE 6.0; Windows NT 5.2)"));
         var response = await client.GetAsync(url);
         var text = await response.Content.ReadAsStringAsync();
         return text;

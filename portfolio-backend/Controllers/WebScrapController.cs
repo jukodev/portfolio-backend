@@ -6,7 +6,7 @@ namespace portfolio_backend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class WebScrapController (WebScraper scraper) : ControllerBase 
+    public class WebScrapController(WebScraper scraper) : ControllerBase
     {
         [HttpGet("Test")]
         public async Task<WebScrapedStockDto> Get()
@@ -16,10 +16,17 @@ namespace portfolio_backend.Controllers
         }
 
         [HttpGet("Stock")]
-        public async Task<WebScrapedStockDto> GetStock(string url)
+        public async Task<ActionResult<WebScrapedStockDto>> GetStock(string url)
         {
-            var result = await scraper.ScrapStockData(url);
-            return result;
+            try
+            {
+                var result = await scraper.ScrapStockData(url);
+                return result;
+            }
+            catch (Exception e)
+            {
+                return BadRequest("Failed to scrape website: " + e.Message);
+            }
         }
     }
 }
