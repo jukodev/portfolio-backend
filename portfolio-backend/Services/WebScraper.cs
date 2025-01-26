@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using portfolio_backend.DTOs;
+using PuppeteerSharp;
 
 namespace portfolio_backend.Services;
 
@@ -11,13 +12,6 @@ public partial class WebScraper()
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
     {
         var html = await GetHtml(url);
-
-        if (url.Equals("https://www.boerse.de/realtime-kurse/Visa-Aktie/US92826C8394"))
-        {
-            var path = Path.Combine(Directory.GetCurrentDirectory(), "stock-data.html");
-            Directory.GetCurrentDirectory();
-            await File.WriteAllTextAsync(path, html);
-        }
 
         var indiceFirst = html.IndexOf("<!-- KURSE -->", StringComparison.Ordinal);
         var indiceLast = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
@@ -89,27 +83,20 @@ public partial class WebScraper()
         return endIndex == -1 ? string.Empty : source.Substring(startIndex, endIndex - startIndex).Trim();
     }
 
-    private async Task<string> GetHtml(string url)
+    private static async Task<string> GetHtml(string url)
     {
-        var handler = new HttpClientHandler
+        await new BrowserFetcher().DownloadAsync();
+        await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions{Headless = true, DefaultViewport = null, Args = new[] {"--no-sandbox"}});
+        await using var page = await browser.NewPageAsync();
+        await page.SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+        await page.SetCookieAsync(new CookieParam
         {
-            UseCookies = true,
-            CookieContainer = new CookieContainer(),
-            AllowAutoRedirect = true,
-        };
-        var client = new HttpClient(handler);
-
-        client.DefaultRequestHeaders.UserAgent.Clear();
-        client.DefaultRequestHeaders.UserAgent.ParseAdd(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
-        );
-        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
-        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
-        client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip, deflate, br");
-        client.DefaultRequestHeaders.Connection.Add("keep-alive");
-
-        var response = await client.GetAsync(url);
-        var text = await response.Content.ReadAsStringAsync();
-        return text;
+            Name = "example_cookie",
+            Value = "example_value",
+            Domain = "boerse.de"
+        });
+        
+        await page.GoToAsync(url);
+        return await page.GetContentAsync();
     }
 }
