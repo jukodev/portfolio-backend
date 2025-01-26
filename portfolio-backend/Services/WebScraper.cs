@@ -1,16 +1,17 @@
 using System.Globalization;
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 using portfolio_backend.DTOs;
 
 namespace portfolio_backend.Services;
 
-public partial class WebScraper(HttpClient client)
+public partial class WebScraper()
 {
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
     {
         var html = await GetHtml(url);
-        
+
         if (url.Equals("https://www.boerse.de/realtime-kurse/Visa-Aktie/US92826C8394"))
         {
             var path = Path.Combine(Directory.GetCurrentDirectory(), "stock-data.html");
@@ -90,10 +91,23 @@ public partial class WebScraper(HttpClient client)
 
     private async Task<string> GetHtml(string url)
     {
+        var handler = new HttpClientHandler
+        {
+            UseCookies = true,
+            CookieContainer = new CookieContainer(),
+            AllowAutoRedirect = true,
+        };
+        var client = new HttpClient(handler);
+
         client.DefaultRequestHeaders.UserAgent.Clear();
-        client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("Portfolio", "1.0"));
-        client.DefaultRequestHeaders.UserAgent.Add(
-            new ProductInfoHeaderValue("(compatible; MSIE 6.0; Windows NT 5.2)"));
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"
+        );
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
+        client.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
+        client.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip, deflate, br");
+        client.DefaultRequestHeaders.Connection.Add("keep-alive");
+
         var response = await client.GetAsync(url);
         var text = await response.Content.ReadAsStringAsync();
         return text;
