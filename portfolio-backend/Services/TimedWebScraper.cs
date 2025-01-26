@@ -7,7 +7,8 @@ public class TimedWebScraper (WebScraper scraper) : BackgroundService
     
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        _timer = new Timer(ScrapeWebsites, null, TimeSpan.Zero, _interval);
+        
+        // _timer = new Timer(ScrapeWebsites, null, TimeSpan.Zero, _interval); TODO
         return Task.CompletedTask;
     }
     

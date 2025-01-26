@@ -62,10 +62,67 @@ public partial class WebScraper()
         };
     }
 
+    public async Task<WebScrapedGoldDto> ScrapGoldData(string url)
+    {
+        var html = await GetHtml(url);
+
+        var start = html.IndexOf("<!-- KURSE EURO -->", StringComparison.Ordinal);
+        var end = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
+        var htmlKurse = html.Substring(start, end - start);
+
+        var lastPrice = ExtractFloatAfterTag(htmlKurse, "<span", CultureInfo.InvariantCulture);
+
+        var afterPrice = AdvancePastSpan(htmlKurse, "<span", "</span>");
+        var currency = ExtractValueBetweenTags(afterPrice, "<span", "</span>");
+        var afterCurrency = AdvancePastSpan(afterPrice, "<span", "</span>");
+
+        var lastPerformance = ExtractFloatAfterTag(afterCurrency, "<span", CultureInfo.InvariantCulture);
+        var afterPerf = AdvancePastSpan(afterCurrency, "<span", "</span>");
+
+        var timeLabel = "Zeit ";
+        var timeIndex = afterPerf.IndexOf(timeLabel, StringComparison.Ordinal);
+        var timeEnd = afterPerf.IndexOf("</div>", timeIndex, StringComparison.Ordinal);
+        var time = afterPerf.Substring(timeIndex + timeLabel.Length, timeEnd - (timeIndex + timeLabel.Length)).Trim();
+        var afterTime = afterPerf[(timeEnd + 6)..];
+
+        var lastPerformancePercent = ExtractFloatAfterTag(afterTime, "<span", CultureInfo.InvariantCulture);
+        var afterPerfPercent = AdvancePastSpan(afterTime, "<span", "</span>");
+
+        const string dateLabel = "Datum&nbsp;";
+        var dateIndex = afterPerfPercent.IndexOf(dateLabel, StringComparison.Ordinal);
+        var dateRaw = afterPerfPercent.Substring(dateIndex + dateLabel.Length, 8); 
+
+        var day = dateRaw[..2];
+        var month = dateRaw.Substring(3, 2) ;
+        var year = dateRaw.Substring(6, 2);
+
+        var lastTime = $"20{year}-{month}-{day} {time}";
+
+        var dto = new WebScrapedGoldDto()
+        {
+            Price = lastPrice,
+            Performance = lastPerformance,
+            PerformancePercentage = lastPerformancePercent,
+            Currency = currency,
+            Time = lastTime
+        };
+
+        return dto;
+    }
+
+    private static string AdvancePastSpan(string source, string startTag, string endTag)
+    {
+        var startIndex = source.IndexOf(startTag, StringComparison.Ordinal);
+        if (startIndex < 0) return source;
+        var endIndex = source.IndexOf(endTag, startIndex, StringComparison.Ordinal);
+        return endIndex < 0 ? source : source.Substring(endIndex + endTag.Length);
+    }
+
+
     private static float ExtractFloatAfterTag(string source, string startTag, IFormatProvider culture)
     {
         var val = ExtractValueBetweenTags(source, startTag, "</span>");
-        val = val.Replace(',', '.');
+        val = val.Replace(".", "").Replace(',', '.');
         return float.TryParse(val, NumberStyles.Any, culture, out var result) ? result : 0.0f;
     }
 
@@ -86,16 +143,18 @@ public partial class WebScraper()
     private static async Task<string> GetHtml(string url)
     {
         await new BrowserFetcher().DownloadAsync();
-        await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions{Headless = true, DefaultViewport = null, Args = new[] {"--no-sandbox"}});
+        await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            { Headless = true, DefaultViewport = null, Args = new[] { "--no-sandbox" } });
         await using var page = await browser.NewPageAsync();
-        await page.SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+        await page.SetUserAgentAsync(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
         await page.SetCookieAsync(new CookieParam
         {
             Name = "example_cookie",
             Value = "example_value",
             Domain = "boerse.de"
         });
-        
+
         await page.GoToAsync(url);
         return await page.GetContentAsync();
     }

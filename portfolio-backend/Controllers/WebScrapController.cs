@@ -28,5 +28,19 @@ namespace portfolio_backend.Controllers
                 return BadRequest("Failed to scrape website: " + e.Message);
             }
         }
+        
+        [HttpGet("Gold")]
+        public async Task<ActionResult<WebScrapedGoldDto>> GetGold(string url)
+        {
+            try
+            {
+                var result = await scraper.ScrapGoldData(url);
+                return result;
+            }
+            catch (Exception e)
+            {
+                return BadRequest("Failed to scrape website: " + e.Message);
+            }
+        }
     }
 }
