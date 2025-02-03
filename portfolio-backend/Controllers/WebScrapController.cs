@@ -6,13 +6,14 @@ namespace portfolio_backend.Controllers
 {
     [ApiController]
     [Route("[controller]")]
-    public class WebScrapController(WebScraper scraper) : ControllerBase
+    public class WebScrapController(WebScraper scraper, ProxyService proxyService) : ControllerBase
     {
         [HttpGet("Test")]
         public async Task<WebScrapedStockDto> Get()
         {
-            var result = await scraper.ScrapStockData("https://www.boerse.de/realtime-kurse/Apple-Aktie/US0378331005");
-            return result;
+            await proxyService.InitializeProxies();
+            //var result = await scraper.ScrapStockData("https://www.boerse.de/realtime-kurse/Apple-Aktie/US0378331005");
+            return null;
         }
 
         [HttpGet("Stock")]

@@ -2,16 +2,20 @@ using System.Globalization;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
+using Ganss.Xss;
 using portfolio_backend.DTOs;
 using PuppeteerSharp;
 
 namespace portfolio_backend.Services;
 
-public partial class WebScraper()
+public partial class WebScraper(ProxyService proxy)
 {
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
     {
-        var html = await GetHtml(url);
+        var rawHtml = await GetHtml(url);
+
+        var sanitizer = new HtmlSanitizer();
+        var html = sanitizer.Sanitize(rawHtml);
 
         var indiceFirst = html.IndexOf("<!-- KURSE -->", StringComparison.Ordinal);
         var indiceLast = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
@@ -140,22 +144,70 @@ public partial class WebScraper()
         return endIndex == -1 ? string.Empty : source.Substring(startIndex, endIndex - startIndex).Trim();
     }
 
-    private static async Task<string> GetHtml(string url)
+    private async Task<string> GetHtml(string url)
     {
-        await new BrowserFetcher().DownloadAsync();
-        await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
-            { Headless = true, DefaultViewport = null, Args = new[] { "--no-sandbox" } });
-        await using var page = await browser.NewPageAsync();
-        await page.SetUserAgentAsync(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
-        await page.SetCookieAsync(new CookieParam
+        var proxyUrl = proxy.GetProxy();
+        var httpClient = new HttpClient(new HttpClientHandler
         {
-            Name = "example_cookie",
-            Value = "example_value",
-            Domain = "boerse.de"
+            Proxy = new WebProxy(proxyUrl),
+            UseProxy = true,
         });
+        /*var userAgent = GenerateRandomUserAgent();
+        httpClient.DefaultRequestHeaders.UserAgent.Clear();
+        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
+        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
+        httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
+        httpClient.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip, deflate, br");
+        httpClient.DefaultRequestHeaders.Connection.Add("keep-alive");*/
+        
+        var res = await httpClient.GetAsync(url);
+        var content = await res.Content.ReadAsStringAsync();
+        return content;
+    }
+    
+    private static string GenerateRandomUserAgent()
+    {
+        var osOptions = new[]
+        {
+            "Windows NT 10.0; Win64; x64",
+            "Windows NT 10.0; WOW64",
+            "Macintosh; Intel Mac OS X 10_15_7",
+            "X11; Linux x86_64",
+            "X11; Ubuntu; Linux x86_64"
+        };
 
-        await page.GoToAsync(url);
-        return await page.GetContentAsync();
+        var browserOptions = new[]
+        {
+            "Chrome/110.0.5481.177",
+            "Chrome/112.0.5615.121",
+            "Chrome/114.0.5735.198",
+            "Firefox/110.0",
+            "Firefox/114.0",
+            "Safari/537.36"
+        };
+
+        var os = osOptions[new Random().Next(osOptions.Length)];
+        var browser = browserOptions[new Random().Next(browserOptions.Length)];
+
+        return $"Mozilla/5.0 ({os}) AppleWebKit/537.36 (KHTML, like Gecko) {browser} Safari/537.36";
+    }
+
+    private static CookieParam GenerateRandomCookie(string domain)
+    {
+        var random = new Random();
+        string[] names = ["session_id", "user_token", "tracking_id", "preferences", "auth"];
+        string[] values = [Guid.NewGuid().ToString(), "xyz123", "track_" + random.Next(100000, 999999), "darkmode=true", "secure_cookie"
+        ];
+
+        return new CookieParam
+        {
+            Name = names[random.Next(names.Length)],
+            Value = values[random.Next(values.Length)],
+            Domain = domain,
+            Path = "/",
+            HttpOnly = random.Next(0, 2) == 1,
+            Secure = random.Next(0, 2) == 1,
+            Expires = (DateTime.UtcNow.AddDays(random.Next(1, 30)) - new DateTime(1970, 1, 1)).TotalSeconds
+        };
     }
 }

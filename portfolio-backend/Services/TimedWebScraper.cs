@@ -1,19 +1,23 @@
 namespace portfolio_backend.Services;
 
-public class TimedWebScraper (WebScraper scraper) : BackgroundService
+public class TimedWebScraper (WebScraper scraper, ProxyService proxyService) : BackgroundService
 {
     private readonly TimeSpan _interval = TimeSpan.FromMinutes(5);
-    private Timer? _timer;
+    private Timer? _scrapeTimer, _proxyTimer;
     
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
+        Console.WriteLine("Timed Web Scraper");
+        _scrapeTimer = new Timer(_ => Task.Run(() => ScrapeWebsites(null)), null, TimeSpan.Zero, _interval);
+        _proxyTimer = new Timer(_ => Task.Run(() => ValidateProxies(null)), null, TimeSpan.Zero, TimeSpan.FromMinutes(10));
+
         
-        // _timer = new Timer(ScrapeWebsites, null, TimeSpan.Zero, _interval); TODO
         return Task.CompletedTask;
     }
     
-    private async void ScrapeWebsites(object? state)
+    private async Task ScrapeWebsites(object? state)
     {
+        return;
         try
         {
             var data = await scraper.ScrapStockData("https://www.boerse.de/realtime-kurse/Apple-Aktie/US0378331005");
@@ -26,9 +30,18 @@ public class TimedWebScraper (WebScraper scraper) : BackgroundService
         }
     }
     
+    private async Task ValidateProxies(object? state)
+    {
+        Console.WriteLine("Validating proxies");
+        await proxyService.ValidateProxies();
+    }
+    
     public override void Dispose()
     {
-        _timer?.Dispose();
+        _scrapeTimer?.Change(Timeout.Infinite, 0);
+        _scrapeTimer?.Dispose();
+        _proxyTimer?.Change(Timeout.Infinite, 0);
+        _proxyTimer?.Dispose();
         GC.SuppressFinalize(this);
         base.Dispose();
     }
