@@ -12,14 +12,15 @@ public partial class WebScraper(ProxyService proxy)
 {
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
     {
-        var rawHtml = await GetHtml(url);
+        var html = await GetHtml(url);
 
-        var sanitizer = new HtmlSanitizer();
-        var html = sanitizer.Sanitize(rawHtml);
+       // Console.WriteLine(rawHtml);
 
         var indiceFirst = html.IndexOf("<!-- KURSE -->", StringComparison.Ordinal);
         var indiceLast = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
         var htmlKurse = html.Substring(indiceFirst, indiceLast - indiceFirst);
+
+        Console.WriteLine("hi");
 
         var lastPrice =
             ExtractFloatAfterTag(htmlKurse, "itemprop=\"price\" content=", CultureInfo.InvariantCulture);
@@ -146,23 +147,23 @@ public partial class WebScraper(ProxyService proxy)
 
     private async Task<string> GetHtml(string url)
     {
-        var proxyUrl = proxy.GetProxy();
-        var httpClient = new HttpClient(new HttpClientHandler
+        await new BrowserFetcher().DownloadAsync();
+        await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+        { Headless = true, DefaultViewport = null, Args = new[] { "--no-sandbox", "--proxy-server=http://104.129.192.180:3128" } });
+        await using var page = await browser.NewPageAsync();
+        await page.SetUserAgentAsync(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+        await page.SetCookieAsync(new CookieParam
         {
-            Proxy = new WebProxy(proxyUrl),
-            UseProxy = true,
+            Name = "example_cookie",
+            Value = "example_value",
+            Domain = "boerse.de"
         });
-        /*var userAgent = GenerateRandomUserAgent();
-        httpClient.DefaultRequestHeaders.UserAgent.Clear();
-        httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(userAgent);
-        httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/html"));
-        httpClient.DefaultRequestHeaders.AcceptLanguage.ParseAdd("en-US,en;q=0.9");
-        httpClient.DefaultRequestHeaders.AcceptEncoding.ParseAdd("gzip, deflate, br");
-        httpClient.DefaultRequestHeaders.Connection.Add("keep-alive");*/
-        
-        var res = await httpClient.GetAsync(url);
-        var content = await res.Content.ReadAsStringAsync();
-        return content;
+
+        await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
+        await page.WaitForSelectorAsync("body");
+
+        return await page.GetContentAsync();
     }
     
     private static string GenerateRandomUserAgent()

@@ -15,6 +15,7 @@ public class ProxyService
     
     public async Task ValidateProxies()
     {
+        return;
         Console.WriteLine(_proxies.Count + " proxies found");
         try
         {
