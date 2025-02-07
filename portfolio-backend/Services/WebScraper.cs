@@ -4,19 +4,17 @@ using PuppeteerSharp;
 
 namespace portfolio_backend.Services;
 
-public partial class WebScraper
+public partial class WebScraper(ProxyService proxyService)
 {
-    public async Task<WebScrapedStockDto> ScrapStockData(string url, string proxy)
+    public async Task<WebScrapedStockDto> ScrapStockData(string url)
     {
-        var html = await GetHtml(url, proxy);
+        var html = await GetHtml(url);
 
         if(html.Contains("Sorry, you have been blocked"))
         {
             Console.WriteLine("Cloudflare Block");
             throw new Exception("Cloudflare Block");
         }
-
-       // Console.WriteLine(rawHtml);
 
         var indiceFirst = html.IndexOf("<!-- KURSE -->", StringComparison.Ordinal);
         var indiceLast = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
@@ -67,9 +65,9 @@ public partial class WebScraper
         };
     }
 
-    public async Task<WebScrapedGoldDto> ScrapGoldData(string url, string proxy)
+    public async Task<WebScrapedGoldDto> ScrapGoldData(string url)
     {
-        var html = await GetHtml(url, proxy);
+        var html = await GetHtml(url);
 
         var start = html.IndexOf("<!-- KURSE EURO -->", StringComparison.Ordinal);
         var end = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
@@ -145,13 +143,13 @@ public partial class WebScraper
         return endIndex == -1 ? string.Empty : source.Substring(startIndex, endIndex - startIndex).Trim();
     }
 
-    private async Task<string> GetHtml(string url, string proxy)
+    private async Task<string> GetHtml(string url)
     {
         try
         {
             await new BrowserFetcher().DownloadAsync();
             await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
-            { Headless = true, DefaultViewport = null, Args = new[] { "--no-sandbox", $"--proxy-server={proxy}" } });
+            { Headless = false, DefaultViewport = null, Args = new[] { "--no-sandbox", $"--proxy-server={proxyService.GetProxy()}" } });
             await using var page = await browser.NewPageAsync();
             await page.SetUserAgentAsync(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
@@ -162,15 +160,31 @@ public partial class WebScraper
                 Domain = "boerse.de"
             });
 
+            page.DefaultTimeout = 60000;
             await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
             await page.WaitForSelectorAsync("body");
 
             return await page.GetContentAsync();
         }
+        catch (NavigationException e)
+        {
+            Console.WriteLine("Navigation error: " + e.Message);
+            throw new Exception("Navigation error: " + e.Message);
+        }
+        catch (TimeoutException e)
+        {
+            Console.WriteLine("Timeout error: " + e.Message);
+            throw new Exception("Timeout error: " + e.Message);
+        }
+        catch (PuppeteerException e)
+        {
+            Console.WriteLine("Puppeteer error: " + e.Message);
+            throw new Exception("Puppeteer error: " + e.Message);
+        }
         catch (Exception e)
         {
-            Console.WriteLine("Error at fetching html: "+ e.Message);
-            return string.Empty;
+            Console.WriteLine("General error: " + e.Message);
+            throw new Exception("Error while fetching html: " + e.Message);
         }
     }
     

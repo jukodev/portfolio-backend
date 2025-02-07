@@ -44,7 +44,7 @@ public class ProxyService
             Console.WriteLine(_proxies.Count + " proxies valid");
             if (_proxies.Count < 30)
             {
-                await InitializeProxies();
+                //await InitializeProxies();
             }
 
         }
@@ -54,8 +54,33 @@ public class ProxyService
         }
     }
     
-    public async Task InitializeProxies()
+    public void InitializeProxies()
     {
+        _proxies.Clear();
+        _proxies.Add("http://198.23.239.134:6540");
+        _proxies.Add("http://207.244.217.165:6712");
+        _proxies.Add("http://107.172.163.27:6543");
+        _proxies.Add("http://64.137.42.112:5157");
+        _proxies.Add("http://173.211.0.148:6641");
+        _proxies.Add("http://161.123.152.115:6360");
+        _proxies.Add("http://23.94.138.75:6349");
+        _proxies.Add("http://154.36.110.199:6853");
+        _proxies.Add("http://173.0.9.70:5653");
+        _proxies.Add("http://173.0.9.209:5792");
+
+        /*198.23.239.134:6540
+207.244.217.165:6712
+107.172.163.27:6543
+64.137.42.112:5157
+173.211.0.148:6641
+161.123.152.115:6360
+23.94.138.75:6349
+154.36.110.199:6853
+173.0.9.70:5653
+173.0.9.209:5792
+
+         * 
+         * 
         _proxies.Clear();
         using var httpClient = new HttpClient();
         var response = await httpClient.GetAsync(ProxyListUrl);
@@ -63,9 +88,9 @@ public class ProxyService
         var proxies = JsonConvert.DeserializeObject<ProxyResponseDto>(json);
         _proxies = proxies!.Proxies.Select(p => p.Proxy).ToList();
         Console.WriteLine(_proxies.Count + " proxies found");
-        await ValidateProxies();
+        await ValidateProxies();*/
     }
-    
+
     public string GetProxy()
     {
         var random = new Random();

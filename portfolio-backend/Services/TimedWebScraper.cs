@@ -9,7 +9,7 @@ public class TimedWebScraper (WebScraper scraper, ProxyService proxyService) : B
     {
         Console.WriteLine("Timed Web Scraper");
         _scrapeTimer = new Timer(_ => Task.Run(() => ScrapeWebsites(null)), null, TimeSpan.Zero, _interval);
-        _proxyTimer = new Timer(_ => Task.Run(() => ValidateProxies(null)), null, TimeSpan.Zero, TimeSpan.FromMinutes(10));
+        _proxyTimer = new Timer(_ => Task.Run(() => ValidateProxies(null)), null, TimeSpan.Zero, TimeSpan.FromMinutes(60));
 
         
         return Task.CompletedTask;
@@ -30,10 +30,10 @@ public class TimedWebScraper (WebScraper scraper, ProxyService proxyService) : B
         }
     }
     
-    private async Task ValidateProxies(object? state)
+    private void ValidateProxies(object? state)
     {
         Console.WriteLine("Validating proxies");
-        await proxyService.ValidateProxies();
+        proxyService.InitializeProxies();
     }
     
     public override void Dispose()

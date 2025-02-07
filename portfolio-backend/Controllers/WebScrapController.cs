@@ -11,17 +11,17 @@ namespace portfolio_backend.Controllers
         [HttpGet("Test")]
         public async Task<WebScrapedStockDto> Get()
         {
-            await proxyService.InitializeProxies();
+            proxyService.InitializeProxies();
             //var result = await scraper.ScrapStockData("https://www.boerse.de/realtime-kurse/Apple-Aktie/US0378331005");
             return null;
         }
 
         [HttpGet("Stock")]
-        public async Task<ActionResult<WebScrapedStockDto>> GetStock(string url, string proxy)
+        public async Task<ActionResult<WebScrapedStockDto>> GetStock(string url)
         {
             try
             {
-                var result = await scraper.ScrapStockData(url, proxy);
+                var result = await scraper.ScrapStockData(url);
                 return result;
             }
             catch (Exception e)
@@ -31,11 +31,11 @@ namespace portfolio_backend.Controllers
         }
         
         [HttpGet("Gold")]
-        public async Task<ActionResult<WebScrapedGoldDto>> GetGold(string url, string proxy)
+        public async Task<ActionResult<WebScrapedGoldDto>> GetGold(string url)
         {
             try
             {
-                var result = await scraper.ScrapGoldData(url, proxy);
+                var result = await scraper.ScrapGoldData(url);
                 return result;
             }
             catch (Exception e)
