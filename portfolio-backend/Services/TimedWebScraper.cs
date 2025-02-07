@@ -20,8 +20,8 @@ public class TimedWebScraper (WebScraper scraper, ProxyService proxyService) : B
         return;
         try
         {
-            var data = await scraper.ScrapStockData("https://www.boerse.de/realtime-kurse/Apple-Aktie/US0378331005");
-            Console.WriteLine(data);
+            //var data = await scraper.ScrapStockData("https://www.boerse.de/realtime-kurse/Apple-Aktie/US0378331005");
+            //Console.WriteLine(data);
             // TODO save data to database
         }
         catch (Exception e)

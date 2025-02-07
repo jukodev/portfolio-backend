@@ -17,11 +17,11 @@ namespace portfolio_backend.Controllers
         }
 
         [HttpGet("Stock")]
-        public async Task<ActionResult<WebScrapedStockDto>> GetStock(string url)
+        public async Task<ActionResult<WebScrapedStockDto>> GetStock(string url, string proxy)
         {
             try
             {
-                var result = await scraper.ScrapStockData(url);
+                var result = await scraper.ScrapStockData(url, proxy);
                 return result;
             }
             catch (Exception e)
@@ -31,11 +31,11 @@ namespace portfolio_backend.Controllers
         }
         
         [HttpGet("Gold")]
-        public async Task<ActionResult<WebScrapedGoldDto>> GetGold(string url)
+        public async Task<ActionResult<WebScrapedGoldDto>> GetGold(string url, string proxy)
         {
             try
             {
-                var result = await scraper.ScrapGoldData(url);
+                var result = await scraper.ScrapGoldData(url, proxy);
                 return result;
             }
             catch (Exception e)

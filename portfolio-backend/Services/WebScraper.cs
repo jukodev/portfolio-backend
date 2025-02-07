@@ -1,18 +1,14 @@
 using System.Globalization;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Text.RegularExpressions;
-using Ganss.Xss;
 using portfolio_backend.DTOs;
 using PuppeteerSharp;
 
 namespace portfolio_backend.Services;
 
-public partial class WebScraper(ProxyService proxy)
+public partial class WebScraper
 {
-    public async Task<WebScrapedStockDto> ScrapStockData(string url)
+    public async Task<WebScrapedStockDto> ScrapStockData(string url, string proxy)
     {
-        var html = await GetHtml(url);
+        var html = await GetHtml(url, proxy);
 
        // Console.WriteLine(rawHtml);
 
@@ -67,9 +63,9 @@ public partial class WebScraper(ProxyService proxy)
         };
     }
 
-    public async Task<WebScrapedGoldDto> ScrapGoldData(string url)
+    public async Task<WebScrapedGoldDto> ScrapGoldData(string url, string proxy)
     {
-        var html = await GetHtml(url);
+        var html = await GetHtml(url, proxy);
 
         var start = html.IndexOf("<!-- KURSE EURO -->", StringComparison.Ordinal);
         var end = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
@@ -145,11 +141,11 @@ public partial class WebScraper(ProxyService proxy)
         return endIndex == -1 ? string.Empty : source.Substring(startIndex, endIndex - startIndex).Trim();
     }
 
-    private async Task<string> GetHtml(string url)
+    private async Task<string> GetHtml(string url, string proxy)
     {
         await new BrowserFetcher().DownloadAsync();
         await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
-        { Headless = true, DefaultViewport = null, Args = new[] { "--no-sandbox", "--proxy-server=http://104.129.192.180:3128" } });
+        { Headless = true, DefaultViewport = null, Args = new[] { "--no-sandbox", $"--proxy-server={proxy}" } });
         await using var page = await browser.NewPageAsync();
         await page.SetUserAgentAsync(
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
