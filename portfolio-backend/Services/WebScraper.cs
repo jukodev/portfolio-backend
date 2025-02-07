@@ -12,6 +12,7 @@ public partial class WebScraper
 
         if(html.Contains("Sorry, you have been blocked"))
         {
+            Console.WriteLine("Cloudflare Block");
             throw new Exception("Cloudflare Block");
         }
 
@@ -146,23 +147,31 @@ public partial class WebScraper
 
     private async Task<string> GetHtml(string url, string proxy)
     {
-        await new BrowserFetcher().DownloadAsync();
-        await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
-        { Headless = true, DefaultViewport = null, Args = new[] { "--no-sandbox", $"--proxy-server={proxy}" } });
-        await using var page = await browser.NewPageAsync();
-        await page.SetUserAgentAsync(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
-        await page.SetCookieAsync(new CookieParam
+        try
         {
-            Name = "example_cookie",
-            Value = "example_value",
-            Domain = "boerse.de"
-        });
+            await new BrowserFetcher().DownloadAsync();
+            await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
+            { Headless = true, DefaultViewport = null, Args = new[] { "--no-sandbox", $"--proxy-server={proxy}" } });
+            await using var page = await browser.NewPageAsync();
+            await page.SetUserAgentAsync(
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
+            await page.SetCookieAsync(new CookieParam
+            {
+                Name = "example_cookie",
+                Value = "example_value",
+                Domain = "boerse.de"
+            });
 
-        await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
-        await page.WaitForSelectorAsync("body");
+            await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
+            await page.WaitForSelectorAsync("body");
 
-        return await page.GetContentAsync();
+            return await page.GetContentAsync();
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine("Error at fetching html: "+ e.Message);
+            return string.Empty;
+        }
     }
     
     private static string GenerateRandomUserAgent()
