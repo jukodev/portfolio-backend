@@ -149,7 +149,7 @@ public partial class WebScraper(ProxyService proxyService)
         {
             await new BrowserFetcher().DownloadAsync();
             await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
-            { Headless = false, DefaultViewport = null, Args = new[] { "--no-sandbox", $"--proxy-server={proxyService.GetProxy()}" } });
+            { Headless = true, DefaultViewport = null, Args = new[] { "--no-sandbox", $"--proxy-server={proxyService.GetProxy()}" } });
             await using var page = await browser.NewPageAsync();
             await page.SetUserAgentAsync(
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
