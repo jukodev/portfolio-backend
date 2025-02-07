@@ -10,13 +10,16 @@ public partial class WebScraper
     {
         var html = await GetHtml(url, proxy);
 
+        if(html.Contains("Sorry, you have been blocked"))
+        {
+            throw new Exception("Cloudflare Block");
+        }
+
        // Console.WriteLine(rawHtml);
 
         var indiceFirst = html.IndexOf("<!-- KURSE -->", StringComparison.Ordinal);
         var indiceLast = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
         var htmlKurse = html.Substring(indiceFirst, indiceLast - indiceFirst);
-
-        Console.WriteLine("hi");
 
         var lastPrice =
             ExtractFloatAfterTag(htmlKurse, "itemprop=\"price\" content=", CultureInfo.InvariantCulture);
