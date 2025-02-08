@@ -7,19 +7,20 @@ namespace portfolio_backend.Services;
 
 public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> logger)
 {
+
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
     {
         var html = await GetHtml(url);
 
-        if(html.Contains("Sorry, you have been blocked"))
+        if (html.Contains("Sorry, you have been blocked"))
         {
-            Console.WriteLine("Cloudflare Block");
+            logger.LogWarning("Cloudflare Block detected for URL: {Url}", url);
             throw new Exception("Cloudflare Block");
         }
 
         var indiceFirst = html.IndexOf("<!-- KURSE -->", StringComparison.Ordinal);
         var indiceLast = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
-        var htmlKurse = html.Substring(indiceFirst, indiceLast - indiceFirst);
+        var htmlKurse = html[indiceFirst..indiceLast];
 
         var lastPrice =
             ExtractFloatAfterTag(htmlKurse, "itemprop=\"price\" content=", CultureInfo.InvariantCulture);
@@ -94,10 +95,10 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
 
         const string dateLabel = "Datum&nbsp;";
         var dateIndex = afterPerfPercent.IndexOf(dateLabel, StringComparison.Ordinal);
-        var dateRaw = afterPerfPercent.Substring(dateIndex + dateLabel.Length, 8); 
+        var dateRaw = afterPerfPercent.Substring(dateIndex + dateLabel.Length, 8);
 
         var day = dateRaw[..2];
-        var month = dateRaw.Substring(3, 2) ;
+        var month = dateRaw.Substring(3, 2);
         var year = dateRaw.Substring(6, 2);
 
         var lastTime = $"20{year}-{month}-{day} {time}";
@@ -150,7 +151,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
         {
             await new BrowserFetcher().DownloadAsync();
             await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
-                { Headless = true, DefaultViewport = null, Args = ["--no-sandbox", $"--proxy-server={proxyService.GetProxy()}"] });
+            { Headless = true, DefaultViewport = null, Args = ["--no-sandbox", $"--proxy-server={proxyService.GetProxy()}"] });
             await using var page = await browser.NewPageAsync();
             await page.SetUserAgentAsync(GenerateRandomUserAgent());
             await page.SetCookieAsync(GenerateRandomCookie());
@@ -159,12 +160,12 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
 
             var blockedDomains = new[]
             {
-                "doubleclick.net", "googlesyndication.com", "adservice.google.com",
-                "ads.yahoo.com", "ads.bing.com", "adroll.com", "outbrain.com",
-                "taboola.com", "amazon-adsystem.com", "criteo.com", "facebook.com/ad",
-                "googleadservices.com", "ads",
-                
-            };
+                        "doubleclick.net", "googlesyndication.com", "adservice.google.com",
+                        "ads.yahoo.com", "ads.bing.com", "adroll.com", "outbrain.com",
+                        "taboola.com", "amazon-adsystem.com", "criteo.com", "facebook.com/ad",
+                        "googleadservices.com", "ads",
+
+                    };
 
             page.Request += async (sender, e) =>
             {
@@ -188,46 +189,46 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
         }
         catch (NavigationException e)
         {
-            Console.WriteLine("Navigation error: " + e.Message);
+            logger.LogError(e, "Navigation error while fetching HTML from URL: {Url}", url);
             throw new Exception("Navigation error: " + e.Message);
         }
         catch (TimeoutException e)
         {
-            Console.WriteLine("Timeout error: " + e.Message);
+            logger.LogError(e, "Timeout error while fetching HTML from URL: {Url}", url);
             throw new Exception("Timeout error: " + e.Message);
         }
         catch (PuppeteerException e)
         {
-            Console.WriteLine("Puppeteer error: " + e.Message);
+            logger.LogError(e, "Puppeteer error while fetching HTML from URL: {Url}", url);
             throw new Exception("Puppeteer error: " + e.Message);
         }
         catch (Exception e)
-        {
-            Console.WriteLine("General error: " + e.Message);
+        {   
+            logger.LogError(e, "General error while fetching HTML from URL: {Url}", url);
             throw new Exception("Error while fetching html: " + e.Message);
         }
     }
-    
+
     private static string GenerateRandomUserAgent()
     {
         var osOptions = new[]
         {
-            "Windows NT 10.0; Win64; x64",
-            "Windows NT 10.0; WOW64",
-            "Macintosh; Intel Mac OS X 10_15_7",
-            "X11; Linux x86_64",
-            "X11; Ubuntu; Linux x86_64"
-        };
+                    "Windows NT 10.0; Win64; x64",
+                    "Windows NT 10.0; WOW64",
+                    "Macintosh; Intel Mac OS X 10_15_7",
+                    "X11; Linux x86_64",
+                    "X11; Ubuntu; Linux x86_64"
+                };
 
         var browserOptions = new[]
         {
-            "Chrome/110.0.5481.177",
-            "Chrome/112.0.5615.121",
-            "Chrome/114.0.5735.198",
-            "Firefox/110.0",
-            "Firefox/114.0",
-            "Safari/537.36"
-        };
+                    "Chrome/110.0.5481.177",
+                    "Chrome/112.0.5615.121",
+                    "Chrome/114.0.5735.198",
+                    "Firefox/110.0",
+                    "Firefox/114.0",
+                    "Safari/537.36"
+                };
 
         var os = osOptions[new Random().Next(osOptions.Length)];
         var browser = browserOptions[new Random().Next(browserOptions.Length)];

@@ -1,3 +1,4 @@
+using portfolio_backend.Middlewares;
 using portfolio_backend.Services;
 
 var cors = "_allowSpecificOrigins";
@@ -33,6 +34,8 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseMiddleware<LoggingMiddleware>();
 
 app.MapControllers();
 
