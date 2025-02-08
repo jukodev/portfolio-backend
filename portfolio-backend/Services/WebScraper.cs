@@ -1,10 +1,11 @@
 using System.Globalization;
 using portfolio_backend.DTOs;
 using PuppeteerSharp;
+using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace portfolio_backend.Services;
 
-public partial class WebScraper(ProxyService proxyService)
+public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> logger)
 {
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
     {
@@ -149,18 +150,37 @@ public partial class WebScraper(ProxyService proxyService)
         {
             await new BrowserFetcher().DownloadAsync();
             await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
-            { Headless = true, DefaultViewport = null, Args = new[] { "--no-sandbox", $"--proxy-server={proxyService.GetProxy()}" } });
+                { Headless = true, DefaultViewport = null, Args = ["--no-sandbox", $"--proxy-server={proxyService.GetProxy()}"] });
             await using var page = await browser.NewPageAsync();
-            await page.SetUserAgentAsync(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3");
-            await page.SetCookieAsync(new CookieParam
-            {
-                Name = "example_cookie",
-                Value = "example_value",
-                Domain = "boerse.de"
-            });
+            await page.SetUserAgentAsync(GenerateRandomUserAgent());
+            await page.SetCookieAsync(GenerateRandomCookie());
 
-            page.DefaultTimeout = 60000;
+            await page.SetRequestInterceptionAsync(true);
+
+            var blockedDomains = new[]
+            {
+                "doubleclick.net", "googlesyndication.com", "adservice.google.com",
+                "ads.yahoo.com", "ads.bing.com", "adroll.com", "outbrain.com",
+                "taboola.com", "amazon-adsystem.com", "criteo.com", "facebook.com/ad",
+                "googleadservices.com", "ads",
+                
+            };
+
+            page.Request += async (sender, e) =>
+            {
+                var url = e.Request.Url.ToLower();
+                if (e.Request.ResourceType == ResourceType.Image || e.Request.ResourceType == ResourceType.Font ||
+                    e.Request.ResourceType == ResourceType.Media || e.Request.ResourceType == ResourceType.StyleSheet ||
+                    blockedDomains.Any(d => url.Contains(d)))
+                {
+                    await e.Request.AbortAsync();
+                }
+                else
+                {
+                    await e.Request.ContinueAsync();
+                }
+            };
+
             await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
             await page.WaitForSelectorAsync("body");
 
@@ -215,7 +235,7 @@ public partial class WebScraper(ProxyService proxyService)
         return $"Mozilla/5.0 ({os}) AppleWebKit/537.36 (KHTML, like Gecko) {browser} Safari/537.36";
     }
 
-    private static CookieParam GenerateRandomCookie(string domain)
+    private static CookieParam GenerateRandomCookie()
     {
         var random = new Random();
         string[] names = ["session_id", "user_token", "tracking_id", "preferences", "auth"];
@@ -226,7 +246,7 @@ public partial class WebScraper(ProxyService proxyService)
         {
             Name = names[random.Next(names.Length)],
             Value = values[random.Next(values.Length)],
-            Domain = domain,
+            Domain = "boerse.de",
             Path = "/",
             HttpOnly = random.Next(0, 2) == 1,
             Secure = random.Next(0, 2) == 1,
