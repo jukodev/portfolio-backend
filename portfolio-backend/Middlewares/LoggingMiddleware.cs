@@ -2,7 +2,7 @@ using System.Diagnostics;
 
 namespace portfolio_backend.Middlewares;
 
-public class LoggingMiddleware(RequestDelegate next, ILogger<LoggingMiddleware> logger)
+public class LoggingMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context)
     {

@@ -73,7 +73,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
 
         var start = html.IndexOf("<!-- KURSE EURO -->", StringComparison.Ordinal);
         var end = html.IndexOf("<!-- ENDE KURSE -->", StringComparison.Ordinal);
-        var htmlKurse = html.Substring(start, end - start);
+        var htmlKurse = html[start..end];
 
         var lastPrice = ExtractFloatAfterTag(htmlKurse, "<span", CultureInfo.InvariantCulture);
 
@@ -87,7 +87,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
         var timeLabel = "Zeit ";
         var timeIndex = afterPerf.IndexOf(timeLabel, StringComparison.Ordinal);
         var timeEnd = afterPerf.IndexOf("</div>", timeIndex, StringComparison.Ordinal);
-        var time = afterPerf.Substring(timeIndex + timeLabel.Length, timeEnd - (timeIndex + timeLabel.Length)).Trim();
+        var time = afterPerf[(timeIndex + timeLabel.Length)..timeEnd].Trim();
         var afterTime = afterPerf[(timeEnd + 6)..];
 
         var lastPerformancePercent = ExtractFloatAfterTag(afterTime, "<span", CultureInfo.InvariantCulture);
@@ -120,7 +120,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
         var startIndex = source.IndexOf(startTag, StringComparison.Ordinal);
         if (startIndex < 0) return source;
         var endIndex = source.IndexOf(endTag, startIndex, StringComparison.Ordinal);
-        return endIndex < 0 ? source : source.Substring(endIndex + endTag.Length);
+        return endIndex < 0 ? source : source[(endIndex + endTag.Length)..];
     }
 
 
@@ -142,7 +142,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
         if (startIndex == -1) return string.Empty;
         startIndex = source.IndexOf('>', startIndex) + 1;
         var endIndex = source.IndexOf(endTag, startIndex, StringComparison.Ordinal);
-        return endIndex == -1 ? string.Empty : source.Substring(startIndex, endIndex - startIndex).Trim();
+        return endIndex == -1 ? string.Empty : source[startIndex..endIndex].Trim();
     }
 
     private async Task<string> GetHtml(string url)
