@@ -35,5 +35,19 @@ namespace portfolio_backend.Controllers
                 return BadRequest("Failed to scrape website: " + e.Message);
             }
         }
+
+        [HttpGet("Misc")]
+        public async Task<ActionResult<string>> GetMisc(string url)
+        {
+            try
+            {
+                var result = await scraper.GetHtml(url);
+                return result;
+            }
+            catch (Exception e)
+            {
+                return BadRequest("Failed to scrape website: " + e.Message);
+            }
+        }
     }
 }

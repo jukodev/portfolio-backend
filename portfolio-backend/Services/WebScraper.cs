@@ -5,7 +5,7 @@ using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace portfolio_backend.Services;
 
-public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> logger)
+public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> logger, IConfiguration configuration)
 {
 
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
@@ -145,7 +145,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
         return endIndex == -1 ? string.Empty : source[startIndex..endIndex].Trim();
     }
 
-    private async Task<string> GetHtml(string url)
+    public async Task<string> GetHtml(string url)
     {
         try
         {
@@ -181,6 +181,8 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
                     await e.Request.ContinueAsync();
                 }
             };
+
+            await page.AuthenticateAsync(new Credentials { Username = configuration["proxy-user"], Password = configuration["proxy-pw"] });
 
             await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
             await page.WaitForSelectorAsync("body");

@@ -7,7 +7,7 @@ public class TimedWebScraper (WebScraper scraper, ProxyService proxyService) : B
     protected override Task ExecuteAsync(CancellationToken stoppingToken)
     {
         Console.WriteLine("Timed Web Scraper");
-        _scrapeTimer = new Timer(_ => Task.Run(() => ScrapeWebsites(null)), null, TimeSpan.FromDays(50), TimeSpan.FromDays(1));
+        _scrapeTimer = new Timer(_ => Task.Run(() => ScrapeWebsites(null)), null, TimeSpan.FromDays(1), TimeSpan.FromDays(1));
         _proxyTimer = new Timer(_ => Task.Run(() => ValidateProxies(null)), null, TimeSpan.Zero, TimeSpan.FromMinutes(60));
 
         
@@ -16,6 +16,7 @@ public class TimedWebScraper (WebScraper scraper, ProxyService proxyService) : B
     
     private async Task ScrapeWebsites(object? _)
     {
+        Console.WriteLine("whut");
         try
         {
             var data = await scraper.ScrapStockData("https://www.boerse.de/realtime-kurse/Apple-Aktie/US0378331005");

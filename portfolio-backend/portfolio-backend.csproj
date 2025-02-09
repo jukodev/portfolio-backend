@@ -1,10 +1,11 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>portfolio_backend</RootNamespace>
+    <UserSecretsId>57942cb0-30e5-4b81-9d44-e542a523e7a5</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
