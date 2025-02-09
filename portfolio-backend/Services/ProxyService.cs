@@ -5,16 +5,25 @@ using portfolio_backend.DTOs;
 
 namespace portfolio_backend.Services;
 
-public class ProxyService(HttpClient httpClient, IConfiguration configuration, ILogger<ProxyService> logger)
+public class ProxyService
 {
-    private List<string> _proxies  = [];
+    private List<string> _proxies = new List<string>();
     private readonly string ProxyListUrl = "https://proxy.webshare.io/api/v2/proxy/list/?mode=direct&page=1&page_size=10";
+    private readonly HttpClient httpClient;
+    private readonly ILogger<ProxyService> logger;
+
+    public ProxyService(HttpClient httpClient, IConfiguration configuration, ILogger<ProxyService> logger)
+    {
+        this.httpClient = httpClient;
+        this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Token {configuration["webshare-authtoken"]}");
+        this.logger = logger;
+        InitializeProxies();
+    }
 
     public void InitializeProxies()
     {
         _proxies.Clear();
 
-        httpClient.DefaultRequestHeaders.Add("Authorization", $"Token {configuration["webshare-authtoken"]}");
 
         httpClient.GetAsync(ProxyListUrl).ContinueWith(task =>
         {

@@ -30,6 +30,7 @@ public class TimedWebScraper (WebScraper scraper, ProxyService proxyService) : B
     
     private void ValidateProxies(object? _)
     {
+        return;
         Console.WriteLine("Validating proxies");
         proxyService.InitializeProxies();
     }
