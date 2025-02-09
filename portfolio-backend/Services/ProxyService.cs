@@ -5,7 +5,7 @@ using portfolio_backend.DTOs;
 
 namespace portfolio_backend.Services;
 
-public class ProxyService(HttpClient httpClient, IConfiguration configuration)
+public class ProxyService(HttpClient httpClient, IConfiguration configuration, ILogger<ProxyService> logger)
 {
     private List<string> _proxies  = [];
     private readonly string ProxyListUrl = "https://proxy.webshare.io/api/v2/proxy/list/?mode=direct&page=1&page_size=10";
@@ -22,6 +22,11 @@ public class ProxyService(HttpClient httpClient, IConfiguration configuration)
             var json = response.Content.ReadAsStringAsync().Result;
             var proxies = JsonConvert.DeserializeObject<ProxyResponseDto>(json);
             _proxies = proxies!.Results.Select(p => $"http://{p.ProxyAddress}:{p.Port}").ToList();
+            logger.LogInformation($"Initialized {_proxies.Count} proxies");
+        }).Exception?.Handle(e =>
+        {
+            logger.LogError("Failed to initialize proxies: " + e.Message);
+            return true;
         });
     }
 
