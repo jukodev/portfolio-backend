@@ -14,6 +14,7 @@ public class ProxyService
 
     public ProxyService(HttpClient httpClient, IConfiguration configuration, ILogger<ProxyService> logger)
     {
+        logger.LogInformation("Initializing ProxyService {}", configuration["webshare-authtoken"]);
         this.httpClient = httpClient;
         this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Token {configuration["webshare-authtoken"]}");
         this.logger = logger;
