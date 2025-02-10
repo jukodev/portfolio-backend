@@ -1,11 +1,12 @@
 using System.Globalization;
 using portfolio_backend.DTOs;
+using portfolio_backend.Utils;
 using PuppeteerSharp;
 using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace portfolio_backend.Services;
 
-public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> logger, IConfiguration configuration)
+public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> logger)
 {
 
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
@@ -182,7 +183,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
                 }
             };
 
-            await page.AuthenticateAsync(new Credentials { Username = configuration["proxy-user"], Password = configuration["proxy-pw"] });
+            await page.AuthenticateAsync(new Credentials { Username = DotEnv.Get("proxy-user"), Password = DotEnv.Get("proxy-pw") });
 
             await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
             await page.WaitForSelectorAsync("body");

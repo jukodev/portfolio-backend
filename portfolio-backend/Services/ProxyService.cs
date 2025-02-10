@@ -2,21 +2,21 @@ using System.Net;
 using System.Text.Json;
 using Newtonsoft.Json;
 using portfolio_backend.DTOs;
+using portfolio_backend.Utils;
 
 namespace portfolio_backend.Services;
 
 public class ProxyService
 {
-    private List<string> _proxies = new List<string>();
+    private List<string> _proxies = [];
     private readonly string ProxyListUrl = "https://proxy.webshare.io/api/v2/proxy/list/?mode=direct&page=1&page_size=10";
     private readonly HttpClient httpClient;
     private readonly ILogger<ProxyService> logger;
 
-    public ProxyService(HttpClient httpClient, IConfiguration configuration, ILogger<ProxyService> logger)
+    public ProxyService(HttpClient httpClient, ILogger<ProxyService> logger)
     {
-        logger.LogInformation("Initializing ProxyService {}", configuration["webshare-authtoken"]);
         this.httpClient = httpClient;
-        this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Token {configuration["webshare-authtoken"]}");
+        this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Token {DotEnv.Get("webshare-authtoken")}");
         this.logger = logger;
         InitializeProxies();
     }
@@ -42,6 +42,10 @@ public class ProxyService
 
     public string GetProxy()
     {
+        if(_proxies.Count == 0)
+        {
+            throw new Exception("No proxies available");
+        }
         var random = new Random();
         var index = random.Next(_proxies.Count);
         return _proxies[index];

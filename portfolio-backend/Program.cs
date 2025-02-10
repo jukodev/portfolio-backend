@@ -1,9 +1,19 @@
 using portfolio_backend.Middlewares;
 using portfolio_backend.Services;
+using portfolio_backend.Utils;
 
 var cors = "_allowSpecificOrigins";
 
 var builder = WebApplication.CreateBuilder(args);
+
+var root = Directory.GetCurrentDirectory();
+var dotenv = Path.Combine(root, ".env");
+DotEnv.Load(dotenv);
+
+var config =
+    new ConfigurationBuilder()
+        .AddEnvironmentVariables()
+        .Build();
 
 builder.Services.AddCors(options =>
 {
@@ -21,7 +31,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 builder.Services.AddSingleton<WebScraper>();
 builder.Services.AddSingleton<ProxyService>();
-builder.Services.AddHostedService<TimedWebScraper>();
+// builder.Services.AddHostedService<TimedWebScraper>(); disabled for now
 
 var app = builder.Build();
 
