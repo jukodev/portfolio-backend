@@ -6,38 +6,38 @@ using portfolio_backend.Utils;
 
 namespace portfolio_backend.Services;
 
-public class ProxyService
+public class ProxyService(HttpClient httpClient, ILogger<ProxyService> logger) : IHostedService
 {
     private List<string> _proxies = [];
     private readonly string ProxyListUrl = "https://proxy.webshare.io/api/v2/proxy/list/?mode=direct&page=1&page_size=10";
-    private readonly HttpClient httpClient;
-    private readonly ILogger<ProxyService> logger;
 
-    public ProxyService(HttpClient httpClient, ILogger<ProxyService> logger)
+    public Task StartAsync(CancellationToken cancellationToken)
     {
-        this.httpClient = httpClient;
-        this.httpClient.DefaultRequestHeaders.Add("Authorization", $"Token {DotEnv.Get("webshare-authtoken")}");
-        this.logger = logger;
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Token {DotEnv.Get("webshare-authtoken")}");
         InitializeProxies();
+        return Task.CompletedTask;
     }
 
-    public void InitializeProxies()
+    public Task StopAsync(CancellationToken cancellationToken)
     {
-        _proxies.Clear();
+        return Task.CompletedTask;
+    }
 
-
-        httpClient.GetAsync(ProxyListUrl).ContinueWith(task =>
+    public async void InitializeProxies()
+    {
+        try
         {
-            var response = task.Result;
-            var json = response.Content.ReadAsStringAsync().Result;
+            _proxies.Clear();
+            var res = await httpClient.GetAsync(ProxyListUrl);
+            var json = res.Content.ReadAsStringAsync().Result;
             var proxies = JsonConvert.DeserializeObject<ProxyResponseDto>(json);
             _proxies = proxies!.Results.Select(p => $"http://{p.ProxyAddress}:{p.Port}").ToList();
             logger.LogInformation($"Initialized {_proxies.Count} proxies");
-        }).Exception?.Handle(e =>
+        }
+        catch (Exception e)
         {
             logger.LogError("Failed to initialize proxies: " + e.Message);
-            return true;
-        });
+        }
     }
 
     public string GetProxy()
@@ -50,4 +50,6 @@ public class ProxyService
         var index = random.Next(_proxies.Count);
         return _proxies[index];
     }
+
+    
 }
