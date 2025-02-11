@@ -6,7 +6,6 @@ public class LoggingMiddleware(RequestDelegate next)
 {
     public async Task InvokeAsync(HttpContext context)
     {
-        var startTime = DateTime.UtcNow;
         var stopwatch = Stopwatch.StartNew();
 
         await next(context);
