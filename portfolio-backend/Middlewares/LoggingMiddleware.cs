@@ -16,9 +16,8 @@ public class LoggingMiddleware(RequestDelegate next)
         var statusCode = context.Response.StatusCode;
         var method = context.Request.Method;
         var path = context.Request.Path;
-        var timestamp = startTime.ToString("dd.MM HH:mm");
 
-        var logMessage = $"{method} {path} - {timestamp} - {statusCode} - {responseTime}ms";
+        var logMessage = $"{method} {path} - {statusCode} - {responseTime}ms";
 
         Console.WriteLine(logMessage);
     }
