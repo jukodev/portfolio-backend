@@ -9,7 +9,7 @@ namespace portfolio_backend.Services;
 public class ProxyService(HttpClient httpClient, ILogger<ProxyService> logger) : IHostedService
 {
     private List<string> _proxies = [];
-    private readonly string ProxyListUrl = "https://proxy.webshare.io/api/v2/proxy/list/?mode=direct&page=1&page_size=10";
+    private readonly string ProxyListUrl = "https://proxy.webshare.io/api/v2/proxy/list/?mode=direct&page=1&page_size=100";
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
