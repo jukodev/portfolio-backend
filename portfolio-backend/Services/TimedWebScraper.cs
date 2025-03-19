@@ -1,6 +1,9 @@
+using Microsoft.EntityFrameworkCore;
+using portfolio_backend.Database;
+
 namespace portfolio_backend.Services;
 
-public class TimedWebScraper (WebScraper scraper, ProxyService proxyService) : BackgroundService
+public class TimedWebScraper (WebScraper scraper, DataContext dataContext) : BackgroundService
 {
     private Timer? _scrapeTimer;
     
@@ -16,6 +19,7 @@ public class TimedWebScraper (WebScraper scraper, ProxyService proxyService) : B
         try
         {
             var data = await scraper.ScrapStockData("https://www.boerse.de/realtime-kurse/Apple-Aktie/US0378331005");
+
             // TODO save data to database
         }
         catch (Exception e)

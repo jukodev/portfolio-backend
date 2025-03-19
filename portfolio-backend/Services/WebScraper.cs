@@ -148,11 +148,12 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
 
     public async Task<string> GetHtml(string url)
     {
+        var proxy = proxyService.GetProxy();
         try
         {
             await new BrowserFetcher().DownloadAsync();
             await using var browser = await Puppeteer.LaunchAsync(new LaunchOptions
-            { Headless = true, DefaultViewport = null, Args = ["--no-sandbox", $"--proxy-server={proxyService.GetProxy()}"] });
+            { Headless = true, DefaultViewport = null, Args = ["--no-sandbox", $"--proxy-server={proxy}"] });
             await using var page = await browser.NewPageAsync();
             await page.SetUserAgentAsync(GenerateRandomUserAgent());
             await page.SetCookieAsync(GenerateRandomCookie());
@@ -165,7 +166,6 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
                         "ads.yahoo.com", "ads.bing.com", "adroll.com", "outbrain.com",
                         "taboola.com", "amazon-adsystem.com", "criteo.com", "facebook.com/ad",
                         "googleadservices.com", "ads",
-
                     };
 
             page.Request += async (sender, e) =>
@@ -196,22 +196,22 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
         }
         catch (NavigationException e)
         {
-            logger.LogError(e, "Navigation error while fetching HTML from URL: {Url}", url);
+            logger.LogError(e, "Navigation error while fetching HTML from URL: {Url} with proxy {Proxy}", url, proxy);
             throw new Exception("Navigation error: " + e.Message);
         }
         catch (TimeoutException e)
         {
-            logger.LogError(e, "Timeout error while fetching HTML from URL: {Url}", url);
+            logger.LogError(e, "Timeout error while fetching HTML from URL: {Url} with proxy {Proxy}", url, proxy);
             throw new Exception("Timeout error: " + e.Message);
         }
         catch (PuppeteerException e)
         {
-            logger.LogError(e, "Puppeteer error while fetching HTML from URL: {Url}", url);
+            logger.LogError(e, "Puppeteer error while fetching HTML from URL: {Url} with proxy {Proxy}", url, proxy);
             throw new Exception("Puppeteer error: " + e.Message);
         }
         catch (Exception e)
         {   
-            logger.LogError(e, "General error while fetching HTML from URL: {Url}", url);
+            logger.LogError(e, "General error while fetching HTML from URL: {Url} with proxy {Proxy}", url, proxy);
             throw new Exception("Error while fetching html: " + e.Message);
         }
     }
