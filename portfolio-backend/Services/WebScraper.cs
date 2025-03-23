@@ -8,6 +8,7 @@ namespace portfolio_backend.Services;
 
 public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> logger)
 {
+    public static List<string> FailedProxys = [];
 
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
     {
@@ -183,9 +184,6 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
                 }
             };
 
-            logger.LogInformation("proxy-user: " + DotEnv.Get("proxy-user"));
-            logger.LogInformation("proxy-pw: " + DotEnv.Get("proxy-pw"));
-
             //if (DotEnv.Get("environment").Equals("dev")) // prod is authed via ip
             //{
             await page.AuthenticateAsync(new Credentials { Username = DotEnv.Get("proxy-user"), Password = DotEnv.Get("proxy-pw") });
@@ -200,6 +198,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
         catch (NavigationException e)
         {
             logger.LogError(e, "Navigation error while fetching HTML from URL: {Url} with proxy {Proxy}", url, proxy);
+            FailedProxys.Add(proxy);
             throw new Exception("Navigation error: " + e.Message, e.InnerException);
         }
         catch (TimeoutException e)

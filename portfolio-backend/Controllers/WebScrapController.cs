@@ -49,5 +49,14 @@ namespace portfolio_backend.Controllers
                 return BadRequest("Failed to scrape website: " + e.Message);
             }
         }
+
+        [HttpGet("Proxy")]
+        public ActionResult<Dictionary<string, int>> GetProxy()
+        {
+            var ipCounts = WebScraper.FailedProxys
+            .GroupBy(ip => ip)
+            .ToDictionary(group => group.Key, group => group.Count());
+            return ipCounts;
+        }
     }
 }
