@@ -183,10 +183,13 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
                 }
             };
 
-            if (DotEnv.Get("environment").Equals("dev")) // prod is authed via ip
-            {
-                await page.AuthenticateAsync(new Credentials { Username = DotEnv.Get("proxy-user"), Password = DotEnv.Get("proxy-pw") });
-            }   
+            logger.LogInformation("proxy-user: " + DotEnv.Get("proxy-user"));
+            logger.LogInformation("proxy-pw: " + DotEnv.Get("proxy-pw"));
+
+            //if (DotEnv.Get("environment").Equals("dev")) // prod is authed via ip
+            //{
+            await page.AuthenticateAsync(new Credentials { Username = DotEnv.Get("proxy-user"), Password = DotEnv.Get("proxy-pw") });
+            //}   
 
 
             await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
@@ -197,7 +200,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
         catch (NavigationException e)
         {
             logger.LogError(e, "Navigation error while fetching HTML from URL: {Url} with proxy {Proxy}", url, proxy);
-            throw new Exception("Navigation error: " + e.Message);
+            throw new Exception("Navigation error: " + e.Message, e.InnerException);
         }
         catch (TimeoutException e)
         {
