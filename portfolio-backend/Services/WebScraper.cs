@@ -8,7 +8,7 @@ namespace portfolio_backend.Services;
 
 public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> logger)
 {
-    public static List<string> FailedProxys = [];
+    public static readonly List<string> FailedProxys = [];
 
     public async Task<WebScrapedStockDto> ScrapStockData(string url)
     {
@@ -184,11 +184,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
                 }
             };
 
-            //if (DotEnv.Get("environment").Equals("dev")) // prod is authed via ip
-            //{
             await page.AuthenticateAsync(new Credentials { Username = DotEnv.Get("proxy-user"), Password = DotEnv.Get("proxy-pw") });
-            //}   
-
 
             await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
             await page.WaitForSelectorAsync("body");

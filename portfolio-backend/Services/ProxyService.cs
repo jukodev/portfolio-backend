@@ -1,5 +1,3 @@
-using System.Net;
-using System.Text.Json;
 using Newtonsoft.Json;
 using portfolio_backend.DTOs;
 using portfolio_backend.Utils;
@@ -32,11 +30,11 @@ public class ProxyService(HttpClient httpClient, ILogger<ProxyService> logger) :
             var json = res.Content.ReadAsStringAsync().Result;
             var proxies = JsonConvert.DeserializeObject<ProxyResponseDto>(json);
             _proxies = proxies!.Results.Select(p => $"http://{p.ProxyAddress}:{p.Port}").ToList();
-            logger.LogInformation($"Initialized {_proxies.Count} proxies");
+            logger.LogInformation("Initialized {} proxies", _proxies.Count);
         }
         catch (Exception e)
         {
-            logger.LogError("Failed to initialize proxies: " + e.Message);
+            logger.LogError("Failed to initialize proxies: {}", e.Message);
         }
     }
 

@@ -3,7 +3,7 @@ using portfolio_backend.Database;
 
 namespace portfolio_backend.Services;
 
-public class TimedWebScraper (WebScraper scraper, DataContext dataContext) : BackgroundService
+public class TimedWebScraper (WebScraper scraper) : BackgroundService
 {
     private Timer? _scrapeTimer;
     
