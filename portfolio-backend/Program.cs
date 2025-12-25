@@ -29,9 +29,15 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
+/*builder.Services.AddDbContext<DataContext>(opt =>
+    opt.UseMySql(
+        DotEnv.Get("db-connection"),
+        ServerVersion.AutoDetect(DotEnv.Get("db-connection"))
+    )); disabled for now */
 builder.Services.AddSingleton<ProxyService>();
 builder.Services.AddHostedService(prov => prov.GetRequiredService<ProxyService>());
 builder.Services.AddSingleton<WebScraper>();
+
 // builder.Services.AddHostedService<TimedWebScraper>(); disabled for now
 
 var app = builder.Build();

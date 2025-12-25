@@ -184,7 +184,7 @@ public partial class WebScraper(ProxyService proxyService, ILogger<WebScraper> l
                 }
             };
 
-            await page.AuthenticateAsync(new Credentials { Username = DotEnv.Get("proxy-user"), Password = DotEnv.Get("proxy-pw") });
+            await page.AuthenticateAsync(new Credentials { Username = DotEnv.Get("PROXY_USER"), Password = DotEnv.Get("PROXY_PW") });
 
             await page.GoToAsync(url, WaitUntilNavigation.Networkidle0);
             await page.WaitForSelectorAsync("body");

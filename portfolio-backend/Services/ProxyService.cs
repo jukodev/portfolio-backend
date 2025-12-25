@@ -11,7 +11,7 @@ public class ProxyService(HttpClient httpClient, ILogger<ProxyService> logger) :
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        httpClient.DefaultRequestHeaders.Add("Authorization", $"Token {DotEnv.Get("webshare-authtoken")}");
+        httpClient.DefaultRequestHeaders.Add("Authorization", $"Token {DotEnv.Get("WEBSHARE_AUTHTOKEN")}");
         InitializeProxies();
         return Task.CompletedTask;
     }
@@ -35,6 +35,7 @@ public class ProxyService(HttpClient httpClient, ILogger<ProxyService> logger) :
         catch (Exception e)
         {
             logger.LogError("Failed to initialize proxies: {}", e.Message);
+            throw e;
         }
     }
 

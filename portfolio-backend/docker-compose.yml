@@ -1,0 +1,11 @@
+services:
+  portfolio-backend:
+    build: .
+    ports:
+      - "4000:8080"
+    environment:
+      WEBSHARE_AUTHTOKEN: "${WEBSHARE_AUTHTOKEN}"
+      PROXY_USER: "${PROXY_USER}"
+      PROXY_PW: "${PROXY_PW}"
+      ENVIRONMENT: "${ENVIRONMENT}"
+      DB_CONNECTION: "${DB_CONNECTION}"
